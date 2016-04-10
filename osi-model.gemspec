@@ -29,4 +29,7 @@ Gem::Specification.new do |spec|
   spec.add_development_dependency 'cucumber', '~> 1.3'
   spec.add_development_dependency 'rspec_junit_formatter'
   spec.add_development_dependency 'yard'
+  spec.add_dependency 'functional-ruby', '=1.3.0'
+  spec.add_dependency 'concurrent-ruby'
+  spec.add_dependency 'rs_232', '= 2.0.7'
 end
