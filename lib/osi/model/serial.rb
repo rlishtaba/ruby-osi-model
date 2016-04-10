@@ -1,5 +1,4 @@
 require 'rs_232'
-require 'logger'
 
 module Osi
   module Model
@@ -20,12 +19,9 @@ module Osi
       end
 
       public def connect(timeout)
-        debug "Trying to connect with timeout #{timeout.inspect}"
-
         if @interface.respond_to?(:connecting_timeout)
           @interface.connecting_timeout = timeout
         end
-
         @interface.open
 
         @interface.baud_rate = @baud_rate
@@ -33,28 +29,28 @@ module Osi
         @interface.parity = @parity
         @interface.stop_bits = @stop_bits
         @interface.flow_control = @flow_control
-        @connected = connected?
+
+        spawn_new_read_thread.
+            connected?
       rescue Exception => ex
         abort(ex.message)
       end
 
       public def disconnect
         flush
+        join_read_thread!
         @interface.close
-        @connected = connected?
         !connected?
       end
 
       # @return [Bool]
       #
-      public def connected?
+      def connected?
         @interface && !@interface.closed?
       end
 
-      public def push_down(bytes)
-        fail Errors::NotConnectedError unless connected?
-        debug "writing out to the stream: #{bytes.inspect}"
-        self.write(bytes)
+      def push_down(bytes)
+        write(bytes)
       end
 
       private def flush
@@ -62,6 +58,7 @@ module Osi
       end
 
       private def write(bytes)
+        fail Errors::NotConnectedError unless connected?
         @interface.write(bytes)
       end
 
@@ -82,6 +79,8 @@ module Osi
       #  interface.read( 10 ) #=> '1111111111'
       #
       private def read(count, blocking = false)
+        fail Errors::NotConnectedError unless connected?
+
         array = []
 
         bytes_count = (count == -1) ? @interface.available? : count
@@ -120,12 +119,6 @@ module Osi
       private def read_io_until(count, up_to)
         sleep 0.001 until block_io_until(count, up_to)
         read(count)
-      end
-
-      private def debug(message)
-                @logger ||= ::Logger.new($stdout)
-                @logger.debug("[#{self.class}]: #{message}")
-
       end
     end
   end
