@@ -3,10 +3,7 @@ require 'logger'
 
 module Osi
   module Model
-    autoload :Layer, 'osi/model/layer'
-    autoload :Transport, 'osi/model/transport'
-    autoload :Serial, 'osi/model/serial'
-    autoload :Tcp, 'osi/model/tcp'
+    autoload :Layers, 'osi/model/layers'
     autoload :Logging, 'osi/model/logging'
 
     class << self
