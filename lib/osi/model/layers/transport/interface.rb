@@ -8,7 +8,9 @@ module Osi
           include Osi::Model::Logging
 
           def initialize(&block)
-            @listener = block_given? ? block : -> (_) {}
+            @listener = block_given? ? block : -> (e) {
+              self.swim e
+            }
             Thread.abort_on_exception = true
             @reading = false
             @listener_thread = Functional::Option.none
@@ -71,7 +73,7 @@ module Osi
                   proc.(data) if data
                   sleep(0.01)
                 rescue => ex
-                  error "#{ex.class} occurred in RX thread."
+                  error "#{ex.class} occurred in RX thread: #{ex.message} + #{ex.backtrace.join("\n")}"
                 end
               end
             end

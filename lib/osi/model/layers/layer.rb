@@ -20,14 +20,18 @@ module Osi
           @lower_layer = Option.none
         end
 
+        attr_accessor :lower_layer
+
         def link_with(upper_layer)
           @upper_layer = Option.some upper_layer
-          upper_layer.link_with Option.some self
+          upper_layer.lower_layer = Option.some self
           upper_layer
         end
 
         def swim(chunk)
-          try_to_swim { |l| l.receive chunk }
+          try_to_swim { |l|
+            l.receive chunk
+          }
         end
 
         def sink(chunk)
