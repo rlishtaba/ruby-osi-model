@@ -1,5 +1,3 @@
-require 'concurrent'
-
 #
 # this is playground space. Not for production usage
 #
@@ -10,7 +8,6 @@ module Osi
       module Protocols
         class Bisync < Osi::Model::Layers::Layer
           include Osi::Model::Logging
-          include Concurrent
 
           InvalidLRC = Class.new(RuntimeError)
           MessageTooShort = Class.new(RuntimeError)
@@ -39,10 +36,8 @@ module Osi
           end
 
           def push_down(bytes)
-            debug "pushing down the following: #{bytes.inspect}"
-            Promise.new { sink make_packet_from(bytes) }.then {
-              transition_to WAITING_ACKNOWLEDGE
-            }.execute
+            debug "#{self.class}: pushing down the following: #{bytes.inspect}"
+            sink make_packet_from(bytes)
           end
 
           private
@@ -65,14 +60,14 @@ module Osi
               end
             elsif waiting_acknowledge?
               if ack? byte
-                debug "ACK received: #{byte.inspect}"
+                debug "#{self.class}: ACK received: #{byte.inspect}"
                 transition_to WAITING_STX
               elsif nack? byte
-                debug "NACK received: #{byte.inspect}"
+                debug "#{self.class}: NACK received: #{byte.inspect}"
                 # todo: ARQ strategy with window=1 required
-                transition_to WAITING_STX
+                # transition_to WAITING_STX
               else
-                debug "ignoring byte: #{byte.inspect}"
+                debug "#{self.class}: ignoring byte: #{byte.inspect}"
               end
             else
               if valid_lrc?(byte, @buffer.join.freeze)
@@ -97,7 +92,7 @@ module Osi
           end
 
           def transition_to(new_state)
-            debug("transition to state: #{new_state}")
+            debug("#{self.class}: transition to state: #{new_state}")
             @state = new_state
           end
 
